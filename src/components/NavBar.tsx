@@ -14,10 +14,10 @@ export default async function NavBar() {
           Stocks<span className="text-[var(--accent)]">.</span>
         </Link>
         <nav className="flex items-center gap-px shrink-0">
-          <NavLink href="/">Mkts</NavLink>
+          <NavLink href="/">Markets</NavLink>
           <NavLink href="/news">News</NavLink>
-          <NavLink href="/watchlist">Watch</NavLink>
-          <NavLink href="/portfolio">Port</NavLink>
+          <NavLink href="/watchlist">Watchlist</NavLink>
+          <NavLink href="/portfolio">Portfolio</NavLink>
         </nav>
         <div className="flex-1 min-w-0 max-w-md ml-auto">
           <SearchBox />
@@ -34,21 +34,19 @@ export default async function NavBar() {
                   await signOut({ redirectTo: "/" });
                 }}
               >
-                <button className="text-[var(--fg-2)] hover:text-[var(--fg)]">
-                  <span className="hidden sm:inline">Sign out</span>
-                  <span className="sm:hidden">Out</span>
+                <button className="text-[var(--fg-2)] hover:text-[var(--fg)] whitespace-nowrap">
+                  Sign out
                 </button>
               </form>
             </>
           ) : (
             <>
-              <Link href="/signin" className="text-[var(--fg-2)] hover:text-[var(--fg)]">
-                <span className="hidden sm:inline">Sign in</span>
-                <span className="sm:hidden">In</span>
+              <Link href="/signin" className="text-[var(--fg-2)] hover:text-[var(--fg)] whitespace-nowrap">
+                Sign in
               </Link>
               <Link
                 href="/register"
-                className="hidden sm:inline-block border border-[var(--border-strong)] hover:border-[var(--fg-2)] px-2.5 py-1 text-[var(--fg)]"
+                className="hidden sm:inline-block border border-[var(--border-strong)] hover:border-[var(--fg-2)] px-2.5 py-1 text-[var(--fg)] whitespace-nowrap"
               >
                 Sign up
               </Link>
@@ -64,7 +62,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="px-1.5 sm:px-2 py-1 text-[10px] sm:text-[11px] uppercase tracking-wider text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[var(--surface)] rounded-sm"
+      className="px-1.5 sm:px-2 py-1 text-[10px] sm:text-[11px] uppercase tracking-wider text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[var(--surface)] rounded-sm whitespace-nowrap"
     >
       {children}
     </Link>
