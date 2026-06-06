@@ -300,10 +300,12 @@ export async function getMovers(
   const hit = moversCache.get(scrId);
   if (hit && Date.now() - hit.at < QUOTE_TTL_MS) return hit.items;
   try {
-    const res = (await yahooFinance.screener(
-      { scrIds: scrId, count },
-      QUOTE_OPTS
-    )) as { quotes?: Mover[] };
+    const screenerFn = yahooFinance.screener as unknown as (
+      q: { scrIds: string; count: number },
+      o?: unknown,
+      m?: unknown
+    ) => Promise<{ quotes?: Mover[] }>;
+    const res = await screenerFn({ scrIds: scrId, count }, undefined, QUOTE_OPTS);
     const quotes = res?.quotes ?? [];
     moversCache.set(scrId, { at: Date.now(), items: quotes });
     return quotes;
