@@ -32,7 +32,7 @@ export default function RootLayout({
         <SessionProviderWrapper>
           <NavBar />
           <div className="min-h-[calc(100vh-3rem)]">{children}</div>
-          <footer className="px-4 py-3 text-[10px] tracking-wide uppercase text-[var(--fg-3)] border-t border-[var(--border)] flex items-center justify-between">
+          <footer className="px-4 py-3 text-[10px] tracking-wide uppercase text-[var(--fg-3)] border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <span>Data · Yahoo Finance · delayed 15m</span>
             <span className="num">stocks-services.com</span>
           </footer>

@@ -152,30 +152,30 @@ export default async function QuotePage({ params }: { params: Promise<Params> })
               <span className="num">{quote.currency ?? "USD"}</span>
               {sector && (
                 <>
-                  <span className="text-[var(--border-strong)]">·</span>
-                  <span className="normal-case tracking-normal text-[var(--fg-2)]">{sector}</span>
+                  <span className="hidden sm:inline text-[var(--border-strong)]">·</span>
+                  <span className="hidden sm:inline normal-case tracking-normal text-[var(--fg-2)]">{sector}</span>
                 </>
               )}
             </span>
           }
           actions={<AddToWatchlist symbol={symbol} />}
         />
-        <div className="px-3 py-3 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4 items-end">
+        <div className="px-3 py-3 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-3 sm:gap-4 items-end">
           <div>
             <div className="font-mono text-[22px] font-semibold tracking-wider">{symbol}</div>
             <div className="text-[12px] text-[var(--fg-2)] truncate max-w-[420px]">
               {quote.shortName ?? quote.longName ?? ""}
             </div>
-            <div className="mt-2 flex items-baseline gap-4">
-              <Num className="text-[34px] font-semibold leading-none">
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 sm:gap-x-4">
+              <Num className="text-[28px] sm:text-[34px] font-semibold leading-none">
                 {fmtCurrency(price, quote.currency ?? "USD")}
               </Num>
-              <span className="text-[15px]">
+              <span className="text-[14px] sm:text-[15px]">
                 <Delta value={quote.regularMarketChange} pct={quote.regularMarketChangePercent} />
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-2 text-right lg:justify-self-end">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-x-3 sm:gap-x-4 gap-y-2 sm:gap-y-2 text-left sm:text-right lg:justify-self-end w-full">
             <MiniStat label="Open" value={fmtCurrency(quote.regularMarketOpen)} />
             <MiniStat label="Prev cls" value={fmtCurrency(quote.regularMarketPreviousClose)} />
             <MiniStat label="Day low" value={fmtCurrency(quote.regularMarketDayLow)} />
@@ -434,9 +434,9 @@ export default async function QuotePage({ params }: { params: Promise<Params> })
 
 function MiniStat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="text-right">
+    <div className="min-w-0">
       <div className="label">{label}</div>
-      <Num className="block text-[12px] mt-0.5">{value}</Num>
+      <Num className="block text-[12px] mt-0.5 truncate">{value}</Num>
     </div>
   );
 }

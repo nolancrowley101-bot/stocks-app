@@ -69,12 +69,12 @@ export default async function PortfolioPage() {
 
       {/* KPI strip */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <Kpi label="Market value" value={<Num className="text-[20px]">{fmtCurrency(totalMV)}</Num>} />
-        <Kpi label="Cost basis" value={<Num className="text-[20px] text-[var(--fg-2)]">{fmtCurrency(totalCost)}</Num>} />
+        <Kpi label="Market value" value={<Num className="block text-[16px] sm:text-[20px] truncate">{fmtCurrency(totalMV)}</Num>} />
+        <Kpi label="Cost basis" value={<Num className="block text-[16px] sm:text-[20px] text-[var(--fg-2)] truncate">{fmtCurrency(totalCost)}</Num>} />
         <Kpi
           label="Unrealized P/L"
           value={
-            <span className="text-[20px]">
+            <span className="block text-[16px] sm:text-[20px] truncate">
               <Delta value={totalGain} pct={totalGainPct} />
             </span>
           }
@@ -82,7 +82,7 @@ export default async function PortfolioPage() {
         <Kpi
           label="Positions"
           value={
-            <span className="text-[20px] num">
+            <span className="block text-[16px] sm:text-[20px] num truncate">
               {rows.length}
               <span className="ml-2 text-[12px]">
                 <span className="text-[var(--gain)]">{winners}</span>
