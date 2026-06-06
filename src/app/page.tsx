@@ -1,103 +1,127 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getQuotes, getMovers, getNews } from "@/lib/yahoo";
+import { Card, CardTitle } from "@/components/ui/Card";
+import { fmtCurrency, fmtPercent, fmtChange, changeClass, timeAgo } from "@/lib/format";
 
-export default function Home() {
+export const revalidate = 60;
+
+const INDEX_SYMBOLS = ["^GSPC", "^IXIC", "^DJI", "^RUT"];
+const INDEX_NAMES: Record<string, string> = {
+  "^GSPC": "S&P 500",
+  "^IXIC": "Nasdaq",
+  "^DJI": "Dow Jones",
+  "^RUT": "Russell 2000",
+};
+
+export default async function HomePage() {
+  const [indices, gainers, losers, actives, news] = await Promise.all([
+    getQuotes(INDEX_SYMBOLS),
+    getMovers("day_gainers", 8),
+    getMovers("day_losers", 8),
+    getMovers("most_actives", 8),
+    getNews("stock market", 8),
+  ]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="mx-auto max-w-7xl px-4 py-8 space-y-8">
+      <section>
+        <h1 className="text-2xl font-semibold mb-1">Markets</h1>
+        <p className="text-sm text-zinc-400">
+          Real prices from Yahoo Finance. Delayed at least 15 minutes.
+        </p>
+      </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {indices.map((idx) => (
+          <Link
+            key={idx.symbol}
+            href={`/quote/${encodeURIComponent(idx.symbol)}`}
+            className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div className="text-xs text-zinc-400">{INDEX_NAMES[idx.symbol] ?? idx.symbol}</div>
+            <div className="text-lg font-semibold mt-1">
+              {fmtCurrency(idx.regularMarketPrice, idx.currency ?? "USD")}
+            </div>
+            <div className={`text-sm mt-0.5 ${changeClass(idx.regularMarketChange)}`}>
+              {fmtChange(idx.regularMarketChange)} ({fmtPercent(idx.regularMarketChangePercent)})
+            </div>
+          </Link>
+        ))}
+      </section>
+
+      <section className="grid lg:grid-cols-3 gap-4">
+        <MoverList title="Top gainers" items={gainers} />
+        <MoverList title="Top losers" items={losers} />
+        <MoverList title="Most active" items={actives} />
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">Market news</h2>
+        <div className="grid md:grid-cols-2 gap-3">
+          {news.map((n) => (
+            <a
+              key={n.uuid}
+              href={n.link}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 hover:border-zinc-700"
+            >
+              <div className="text-sm font-medium mb-1 line-clamp-2">{n.title}</div>
+              <div className="text-xs text-zinc-500">
+                {n.publisher ?? "—"} · {timeAgo(n.providerPublishTime)}
+              </div>
+            </a>
+          ))}
+          {news.length === 0 && (
+            <p className="text-sm text-zinc-500">News unavailable right now.</p>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+    </main>
+  );
+}
+
+function MoverList({
+  title,
+  items,
+}: {
+  title: string;
+  items: {
+    symbol: string;
+    shortName?: string;
+    regularMarketPrice?: number;
+    regularMarketChangePercent?: number;
+  }[];
+}) {
+  return (
+    <Card>
+      <CardTitle>{title}</CardTitle>
+      <ul className="divide-y divide-zinc-800">
+        {items.map((m) => (
+          <li key={m.symbol}>
+            <Link
+              href={`/quote/${encodeURIComponent(m.symbol)}`}
+              className="flex justify-between items-center py-2 hover:bg-zinc-900/50 -mx-2 px-2 rounded"
+            >
+              <div className="min-w-0">
+                <div className="font-medium">{m.symbol}</div>
+                <div className="text-xs text-zinc-500 truncate max-w-[160px]">
+                  {m.shortName ?? ""}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm">{fmtCurrency(m.regularMarketPrice)}</div>
+                <div className={`text-xs ${changeClass(m.regularMarketChangePercent)}`}>
+                  {fmtPercent(m.regularMarketChangePercent)}
+                </div>
+              </div>
+            </Link>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="text-sm text-zinc-500 py-2">Unavailable right now.</li>
+        )}
+      </ul>
+    </Card>
   );
 }

@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stocks App
 
-## Getting Started
+Yahoo-Finance-style stocks site: quote pages with chart + analyst targets, search, watchlist, portfolio tracking, news.
 
-First, run the development server:
+**Stack:** Next.js 15 · TypeScript · Tailwind · Prisma 6 + PostgreSQL · Auth.js v5 · yahoo-finance2 · lightweight-charts.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Local setup
+
+### 1. Install PostgreSQL
+
+Easiest option: **Docker**.
+
+```powershell
+docker run -d --name stocks-pg `
+  -e POSTGRES_USER=stocksapp `
+  -e POSTGRES_PASSWORD=stocksapp_dev `
+  -e POSTGRES_DB=stocksapp `
+  -p 5432:5432 `
+  postgres:16
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No Docker? Install from <https://www.postgresql.org/download/windows/> (let it create the default `postgres` user, then create a DB/user with pgAdmin or `psql`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Configure environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env` is already created with sensible defaults that match the Docker command above. If you used different credentials, edit `DATABASE_URL`.
 
-## Learn More
+For `AUTH_SECRET`, generate a real value:
 
-To learn more about Next.js, take a look at the following resources:
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Paste the output into `.env` as `AUTH_SECRET="..."`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Migrate the database
 
-## Deploy on Vercel
+```powershell
+npx prisma migrate dev --name init
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This creates the tables and applies them to your local Postgres.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Run the dev server
+
+```powershell
+npm run dev
+```
+
+Open <http://localhost:3000>.
+
+---
+
+## Smoke test
+
+1. Homepage loads — you should see indices, top movers, market news.
+2. Click `AAPL` from the movers list — quote page with chart, key stats, analyst ratings, news.
+3. Click **Sign up** in the navbar — create an account.
+4. Go back to a quote page → tap **+ Watchlist** — should say "Added ✓".
+5. Navigate to **Watchlist** — your ticker is there with a live price.
+6. Navigate to **Portfolio** — add a holding (e.g., 10 shares of AAPL at $150).
+
+If anything 500s, watch the dev server terminal — most failures will be `DATABASE_URL` misconfigured or Postgres not running.
+
+---
+
+## Useful scripts
+
+```bash
+npm run dev          # Dev server
+npm run build        # Production build
+npm run start        # Run production build
+npx prisma studio    # Visual DB browser at localhost:5555
+npx prisma migrate dev --name <something>   # Add a migration
+```
+
+---
+
+## Project layout
+
+```
+src/
+  app/
+    api/             # API routes (search, quote, watchlist, portfolio, register)
+    quote/[symbol]/  # Quote page
+    watchlist/       # Watchlist page
+    portfolio/       # Portfolio page
+    signin, register, news, page.tsx, layout.tsx
+  components/        # NavBar, SearchBox, PriceChart, AddToWatchlist, ui/
+  lib/
+    db.ts            # Prisma client singleton
+    yahoo.ts         # All Yahoo Finance calls + DB-backed cache
+    format.ts        # Currency/percent/time formatters
+    cn.ts            # Tailwind className helper
+  auth.ts            # Auth.js v5 config
+  middleware.ts      # Protects /watchlist and /portfolio
+prisma/
+  schema.prisma      # DB schema
+```
+
+---
+
+## Deployment
+
+See `DEPLOY.md` for step-by-step VPS + domain + nginx + HTTPS instructions.

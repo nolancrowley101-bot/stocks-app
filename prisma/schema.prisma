@@ -1,0 +1,79 @@
+// Stocks-app database schema
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+
+  watchlists Watchlist[]
+  portfolios Portfolio[]
+}
+
+model Watchlist {
+  id        String          @id @default(cuid())
+  userId    String
+  name      String          @default("My Watchlist")
+  createdAt DateTime        @default(now())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WatchlistItem[]
+
+  @@index([userId])
+}
+
+model WatchlistItem {
+  id          String    @id @default(cuid())
+  watchlistId String
+  symbol      String
+  addedAt     DateTime  @default(now())
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, symbol])
+  @@index([watchlistId])
+}
+
+model Portfolio {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String    @default("My Portfolio")
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings  Holding[]
+
+  @@index([userId])
+}
+
+model Holding {
+  id          String   @id @default(cuid())
+  portfolioId String
+  symbol      String
+  shares      Decimal  @db.Decimal(18, 6)
+  costBasis   Decimal  @db.Decimal(18, 4)
+  purchasedAt DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId])
+}
+
+model QuoteCache {
+  symbol    String   @id
+  quote     Json?
+  payload   Json?
+  quoteAt   DateTime?
+  fetchedAt DateTime?
+  updatedAt DateTime @updatedAt
+}
