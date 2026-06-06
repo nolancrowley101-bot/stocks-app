@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans-stack",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jbMono = JetBrains_Mono({
+  variable: "--font-mono-stack",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,12 +28,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${jbMono.variable} antialiased text-[13px] leading-snug`}>
         <SessionProviderWrapper>
           <NavBar />
-          {children}
-          <footer className="mx-auto max-w-7xl px-4 py-10 mt-12 text-xs text-zinc-500 border-t border-zinc-800">
-            Data: Yahoo Finance (delayed). Not investment advice.
+          <div className="min-h-[calc(100vh-3rem)]">{children}</div>
+          <footer className="px-4 py-3 text-[10px] tracking-wide uppercase text-[var(--fg-3)] border-t border-[var(--border)] flex items-center justify-between">
+            <span>Data · Yahoo Finance · delayed 15m</span>
+            <span className="num">stocks-services.com</span>
           </footer>
         </SessionProviderWrapper>
       </body>

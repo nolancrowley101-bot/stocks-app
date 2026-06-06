@@ -28,24 +28,26 @@ export default function PriceChart({ symbol }: { symbol: string }) {
     const chart = createChart(wrapRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#a1a1aa",
+        textColor: "#8a8a93",
+        fontFamily: "var(--font-mono-stack), ui-monospace, monospace",
+        fontSize: 10,
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: "rgba(63,63,70,0.4)" },
-        horzLines: { color: "rgba(63,63,70,0.4)" },
+        vertLines: { color: "rgba(31,31,36,0.6)" },
+        horzLines: { color: "rgba(31,31,36,0.6)" },
       },
-      rightPriceScale: { borderColor: "rgba(63,63,70,0.4)" },
-      timeScale: { borderColor: "rgba(63,63,70,0.4)", timeVisible: true, secondsVisible: false },
+      rightPriceScale: { borderColor: "#1f1f24" },
+      timeScale: { borderColor: "#1f1f24", timeVisible: true, secondsVisible: false },
       crosshair: { mode: 1 },
       width: wrapRef.current.clientWidth,
       height: 360,
       autoSize: true,
     });
     const series = chart.addSeries(AreaSeries, {
-      topColor: "rgba(16,185,129,0.4)",
-      bottomColor: "rgba(16,185,129,0.0)",
-      lineColor: "rgb(16,185,129)",
+      topColor: "rgba(34,197,94,0.28)",
+      bottomColor: "rgba(34,197,94,0.0)",
+      lineColor: "rgb(34,197,94)",
       lineWidth: 2,
       priceLineVisible: false,
     });
@@ -83,26 +85,33 @@ export default function PriceChart({ symbol }: { symbol: string }) {
   }, [symbol, range]);
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-1">
-          {RANGES.map((r) => (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 h-9 border-b border-[var(--border)]">
+        <div className="flex items-center">
+          {RANGES.map((r, i) => (
             <button
               key={r.id}
               onClick={() => setRange(r.id)}
-              className={`px-2.5 py-1 text-xs rounded-md ${
+              className={`num text-[11px] px-2 h-6 border border-[var(--border)] ${
+                i === 0 ? "rounded-l-sm" : "-ml-px"
+              } ${i === RANGES.length - 1 ? "rounded-r-sm" : ""} ${
                 range === r.id
-                  ? "bg-emerald-500 text-zinc-950 font-medium"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                  ? "bg-[var(--surface-2)] text-[var(--fg)] border-[var(--border-strong)]"
+                  : "text-[var(--fg-2)] hover:text-[var(--fg)] bg-[var(--surface)]"
               }`}
             >
               {r.label}
             </button>
           ))}
         </div>
-        {loading && <span className="text-xs text-zinc-500">Loading…</span>}
+        {loading && (
+          <span className="label flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+            Loading
+          </span>
+        )}
       </div>
-      <div ref={wrapRef} className="w-full" />
+      <div ref={wrapRef} className="w-full p-2" />
     </div>
   );
 }

@@ -20,9 +20,9 @@ export default function RemoveButton({ symbol }: { symbol: string }) {
       onClick={remove}
       disabled={pending}
       aria-label={`Remove ${symbol}`}
-      className="text-zinc-500 hover:text-rose-400 disabled:opacity-50"
+      className="text-[var(--fg-3)] hover:text-[var(--loss)] disabled:opacity-50"
     >
-      <X className="w-4 h-4" />
+      <X className="w-3.5 h-3.5" />
     </button>
   );
 }

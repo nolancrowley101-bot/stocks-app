@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Plus, Check } from "lucide-react";
 
 export default function AddToWatchlist({ symbol }: { symbol: string }) {
   const { status } = useSession();
@@ -34,15 +35,14 @@ export default function AddToWatchlist({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={add}
-        disabled={pending}
-        className="rounded-md border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 text-sm disabled:opacity-50"
-      >
-        {pending ? "Adding…" : done ? "Added ✓" : "+ Watchlist"}
-      </button>
-      {error && <span className="text-xs text-rose-400">{error}</span>}
-    </div>
+    <button
+      onClick={add}
+      disabled={pending}
+      className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider border border-[var(--border-strong)] hover:border-[var(--fg-2)] hover:text-[var(--fg)] px-2 h-6 disabled:opacity-50"
+      title={error ?? undefined}
+    >
+      {done ? <Check className="w-3 h-3 text-[var(--gain)]" /> : <Plus className="w-3 h-3" />}
+      <span>{pending ? "Adding" : done ? "Added" : "Watchlist"}</span>
+    </button>
   );
 }

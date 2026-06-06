@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Module, ModuleHeader, ModuleFooter } from "@/components/ui/Module";
 
 function SignInForm() {
   const router = useRouter();
@@ -33,46 +34,72 @@ function SignInForm() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-16">
-      <h1 className="text-2xl font-semibold mb-6">Sign in</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block">
-          <span className="text-sm text-zinc-400">Email</span>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md bg-zinc-900 border border-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </label>
-        <label className="block">
-          <span className="text-sm text-zinc-400">Password</span>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md bg-zinc-900 border border-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </label>
-        {error && <p className="text-sm text-rose-400">{error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-medium py-2"
-        >
-          {pending ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-      <p className="text-sm text-zinc-400 mt-4">
-        No account?{" "}
-        <Link href="/register" className="text-emerald-400 hover:underline">
-          Create one
-        </Link>
-      </p>
+    <main className="p-2">
+      <div className="max-w-sm mx-auto mt-12">
+        <Module>
+          <ModuleHeader label="Sign in" actions={<span className="num text-[10px] text-[var(--fg-3)]">AUTH</span>} />
+          <form onSubmit={onSubmit} className="p-4 space-y-3">
+            <Field label="Email">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="auth-input"
+                autoComplete="email"
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="auth-input"
+                autoComplete="current-password"
+              />
+            </Field>
+            {error && <p className="text-[12px] text-[var(--loss)]">{error}</p>}
+            <button
+              type="submit"
+              disabled={pending}
+              className="w-full h-9 mt-2 text-[12px] uppercase tracking-wider border border-[var(--border-strong)] hover:border-[var(--fg-2)] bg-[var(--surface-2)] disabled:opacity-50"
+            >
+              {pending ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+          <ModuleFooter>
+            <Link href="/register" className="hover:text-[var(--fg)]">
+              No account? Create one →
+            </Link>
+          </ModuleFooter>
+        </Module>
+      </div>
+      <style>{`
+        .auth-input {
+          width: 100%;
+          height: 2.25rem;
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 2px;
+          padding: 0 0.625rem;
+          color: inherit;
+          font-size: 13px;
+          font-family: var(--font-mono-stack), monospace;
+        }
+        .auth-input:focus { outline: none; border-color: var(--accent); }
+      `}</style>
     </main>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="label block mb-1">{label}</span>
+      {children}
+    </label>
   );
 }
 

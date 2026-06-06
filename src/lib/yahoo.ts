@@ -15,8 +15,10 @@ export type Quote = {
   regularMarketChange?: number;
   regularMarketChangePercent?: number;
   regularMarketPreviousClose?: number;
+  regularMarketOpen?: number;
   regularMarketDayHigh?: number;
   regularMarketDayLow?: number;
+  averageDailyVolume3Month?: number;
   regularMarketVolume?: number;
   marketCap?: number;
   fiftyTwoWeekHigh?: number;
@@ -33,7 +35,12 @@ const QUOTE_OPTS = { validateResult: false } as const;
 
 export async function getQuote(symbol: string): Promise<Quote | null> {
   symbol = symbol.toUpperCase().trim();
-  const cached = await prisma.quoteCache.findUnique({ where: { symbol } });
+  let cached: Awaited<ReturnType<typeof prisma.quoteCache.findUnique>> = null;
+  try {
+    cached = await prisma.quoteCache.findUnique({ where: { symbol } });
+  } catch {
+    // DB unavailable — fall through to live fetch
+  }
   if (
     cached?.quote &&
     cached.quoteAt &&
@@ -44,11 +51,15 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
   try {
     const q = (await yahooFinance.quote(symbol, {}, QUOTE_OPTS)) as Quote | undefined;
     if (!q) return null;
-    await prisma.quoteCache.upsert({
-      where: { symbol },
-      create: { symbol, quote: q as object, quoteAt: new Date() },
-      update: { quote: q as object, quoteAt: new Date() },
-    });
+    try {
+      await prisma.quoteCache.upsert({
+        where: { symbol },
+        create: { symbol, quote: q as object, quoteAt: new Date() },
+        update: { quote: q as object, quoteAt: new Date() },
+      });
+    } catch {
+      // cache write failed — non-fatal
+    }
     return q;
   } catch {
     return (cached?.quote as Quote) ?? null;
@@ -78,7 +89,12 @@ export type SummaryModules = {
 
 export async function getQuoteSummary(symbol: string): Promise<SummaryModules | null> {
   symbol = symbol.toUpperCase().trim();
-  const cached = await prisma.quoteCache.findUnique({ where: { symbol } });
+  let cached: Awaited<ReturnType<typeof prisma.quoteCache.findUnique>> = null;
+  try {
+    cached = await prisma.quoteCache.findUnique({ where: { symbol } });
+  } catch {
+    // DB unavailable — fall through to live fetch
+  }
   if (
     cached?.payload &&
     cached.fetchedAt &&
@@ -102,11 +118,15 @@ export async function getQuoteSummary(symbol: string): Promise<SummaryModules | 
       },
       QUOTE_OPTS
     )) as SummaryModules;
-    await prisma.quoteCache.upsert({
-      where: { symbol },
-      create: { symbol, payload: summary as object, fetchedAt: new Date() },
-      update: { payload: summary as object, fetchedAt: new Date() },
-    });
+    try {
+      await prisma.quoteCache.upsert({
+        where: { symbol },
+        create: { symbol, payload: summary as object, fetchedAt: new Date() },
+        update: { payload: summary as object, fetchedAt: new Date() },
+      });
+    } catch {
+      // cache write failed — non-fatal
+    }
     return summary;
   } catch {
     return (cached?.payload as SummaryModules) ?? null;
@@ -250,6 +270,11 @@ export type NewsItem = {
 };
 
 const newsCache = new Map<string, { at: number; items: NewsItem[] }>();
+const newsByUuid = new Map<string, NewsItem>();
+
+export function getCachedNewsItem(uuid: string): NewsItem | undefined {
+  return newsByUuid.get(uuid);
+}
 
 function normalizeTime(t: number | string | Date): number {
   if (typeof t === "number") return t > 10 ** 12 ? Math.floor(t / 1000) : t;
@@ -277,6 +302,7 @@ export async function getNews(query: string, limit = 12): Promise<NewsItem[]> {
       thumbnail: n.thumbnail?.resolutions?.[0]?.url,
     }));
     newsCache.set(key, { at: Date.now(), items });
+    for (const item of items) newsByUuid.set(item.uuid, item);
     return items;
   } catch {
     return [];
@@ -300,16 +326,19 @@ export async function getMovers(
   const hit = moversCache.get(scrId);
   if (hit && Date.now() - hit.at < QUOTE_TTL_MS) return hit.items;
   try {
-    const screenerFn = yahooFinance.screener as unknown as (
-      q: { scrIds: string; count: number },
-      o?: unknown,
-      m?: unknown
-    ) => Promise<{ quotes?: Mover[] }>;
-    const res = await screenerFn({ scrIds: scrId, count }, undefined, QUOTE_OPTS);
+    // Call as a method (preserve `this` binding) — detaching loses _moduleExec.
+    const res = (await (yahooFinance as unknown as {
+      screener: (
+        q: { scrIds: string; count: number },
+        o?: Record<string, unknown>,
+        m?: Record<string, unknown>
+      ) => Promise<{ quotes?: Mover[] }>;
+    }).screener({ scrIds: scrId, count }, {}, QUOTE_OPTS)) as { quotes?: Mover[] };
     const quotes = res?.quotes ?? [];
     moversCache.set(scrId, { at: Date.now(), items: quotes });
     return quotes;
-  } catch {
+  } catch (err) {
+    console.error(`[movers ${scrId}] failed:`, err);
     return hit?.items ?? [];
   }
 }

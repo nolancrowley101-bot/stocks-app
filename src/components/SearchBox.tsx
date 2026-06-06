@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Search } from "lucide-react";
 
 type Result = {
@@ -18,6 +19,7 @@ export default function SearchBox() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (q.trim().length < 1) {
@@ -48,9 +50,10 @@ export default function SearchBox() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  function go(sym: string) {
+  function navigate(sym: string) {
     setOpen(false);
     setQ("");
+    inputRef.current?.blur();
     router.push(`/quote/${encodeURIComponent(sym.toUpperCase())}`);
   }
 
@@ -64,7 +67,7 @@ export default function SearchBox() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const sym = results[active]?.symbol || q;
-      if (sym) go(sym);
+      if (sym) navigate(sym);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -72,9 +75,10 @@ export default function SearchBox() {
 
   return (
     <div className="relative" ref={ref}>
-      <div className="flex items-center rounded-md bg-zinc-900 border border-zinc-800 px-3 h-9">
-        <Search className="w-4 h-4 text-zinc-500 mr-2" />
+      <div className="flex items-center bg-[var(--surface)] border border-[var(--border)] focus-within:border-[var(--border-strong)] px-2.5 h-8 rounded-sm">
+        <Search className="w-3.5 h-3.5 text-[var(--fg-3)] mr-2" />
         <input
+          ref={inputRef}
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
@@ -83,27 +87,31 @@ export default function SearchBox() {
           onFocus={() => setOpen(true)}
           onKeyDown={onKey}
           placeholder="Search ticker or company"
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-500"
+          className="flex-1 bg-transparent text-[12px] outline-none placeholder:text-[var(--fg-3)]"
           aria-label="Search"
         />
+        <kbd className="hidden sm:inline label tracking-wider border border-[var(--border)] px-1 py-px text-[9px] rounded-sm">/</kbd>
       </div>
       {open && results.length > 0 && (
-        <ul className="absolute z-50 mt-1 w-full rounded-md border border-zinc-800 bg-zinc-900 shadow-xl overflow-hidden">
+        <ul className="absolute z-50 mt-1 w-full bg-[var(--surface)] border border-[var(--border-strong)] shadow-lg overflow-hidden rounded-sm">
           {results.map((r, i) => (
             <li key={r.symbol}>
-              <button
-                type="button"
+              <Link
+                href={`/quote/${encodeURIComponent(r.symbol.toUpperCase())}`}
                 onMouseEnter={() => setActive(i)}
-                onClick={() => go(r.symbol)}
-                className={`w-full text-left px-3 py-2 flex justify-between items-center gap-3 ${
-                  i === active ? "bg-zinc-800" : ""
+                onClick={() => {
+                  setOpen(false);
+                  setQ("");
+                }}
+                className={`block px-3 h-8 flex items-center justify-between gap-3 ${
+                  i === active ? "bg-[var(--surface-2)]" : ""
                 }`}
               >
-                <span className="font-medium">{r.symbol}</span>
-                <span className="text-xs text-zinc-400 truncate max-w-[60%]">
+                <span className="font-mono font-medium text-[12px]">{r.symbol}</span>
+                <span className="text-[11px] text-[var(--fg-2)] truncate max-w-[60%]">
                   {r.shortname || r.longname || ""}
                 </span>
-              </button>
+              </Link>
             </li>
           ))}
         </ul>

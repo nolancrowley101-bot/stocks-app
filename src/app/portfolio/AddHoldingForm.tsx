@@ -43,7 +43,7 @@ export default function AddHoldingForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 grid sm:grid-cols-5 gap-3 items-end"
+      className="grid sm:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end p-3"
     >
       <Field label="Symbol">
         <input
@@ -51,7 +51,7 @@ export default function AddHoldingForm() {
           onChange={(e) => setSymbol(e.target.value.toUpperCase())}
           required
           maxLength={20}
-          className="input"
+          className="input num"
           placeholder="AAPL"
         />
       </Field>
@@ -63,10 +63,10 @@ export default function AddHoldingForm() {
           type="number"
           step="any"
           min="0"
-          className="input"
+          className="input num"
         />
       </Field>
-      <Field label="Cost per share">
+      <Field label="Cost / share">
         <input
           value={costBasis}
           onChange={(e) => setCostBasis(e.target.value)}
@@ -74,7 +74,7 @@ export default function AddHoldingForm() {
           type="number"
           step="any"
           min="0"
-          className="input"
+          className="input num"
         />
       </Field>
       <Field label="Purchased on">
@@ -84,29 +84,29 @@ export default function AddHoldingForm() {
           required
           type="date"
           max={today}
-          className="input"
+          className="input num"
         />
       </Field>
       <button
         type="submit"
         disabled={pending}
-        className="h-10 rounded-md bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-medium"
+        className="h-8 px-4 text-[11px] uppercase tracking-wider border border-[var(--border-strong)] hover:border-[var(--fg-2)] bg-[var(--surface-2)] disabled:opacity-50"
       >
-        {pending ? "Adding…" : "Add"}
+        {pending ? "Adding" : "Add holding"}
       </button>
-      {error && <p className="text-sm text-rose-400 sm:col-span-5">{error}</p>}
+      {error && <p className="text-[12px] text-[var(--loss)] sm:col-span-5">{error}</p>}
       <style>{`
         .input {
           width: 100%;
-          height: 2.5rem;
-          background: rgb(24 24 27);
-          border: 1px solid rgb(39 39 42);
-          border-radius: 0.375rem;
-          padding: 0 0.75rem;
+          height: 2rem;
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 2px;
+          padding: 0 0.5rem;
           color: inherit;
-          font-size: 0.875rem;
+          font-size: 12px;
         }
-        .input:focus { outline: none; border-color: rgb(16 185 129); }
+        .input:focus { outline: none; border-color: var(--accent); }
       `}</style>
     </form>
   );
@@ -115,7 +115,7 @@ export default function AddHoldingForm() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs text-zinc-400 block mb-1">{label}</span>
+      <span className="label block mb-1">{label}</span>
       {children}
     </label>
   );
