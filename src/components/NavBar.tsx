@@ -11,6 +11,7 @@ export default async function NavBar() {
       <NavLink href="/news">News</NavLink>
       <NavLink href="/watchlist">Watchlist</NavLink>
       <NavLink href="/portfolio">Portfolio</NavLink>
+      <NavLink href="/download">Get the app</NavLink>
     </>
   );
 
