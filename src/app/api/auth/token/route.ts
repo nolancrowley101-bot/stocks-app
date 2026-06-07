@@ -7,7 +7,6 @@ import { signToken } from "@/lib/api-auth";
 const Body = z.object({
   email: z.string().email().max(200),
   password: z.string().min(8).max(200),
-  name: z.string().max(80).optional(),
 });
 
 export async function POST(req: Request) {
@@ -21,30 +20,16 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
-  const { email, password, name } = parsed.data;
+  const { email, password } = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "Email already in use" }, { status: 409 });
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-      name,
-      watchlists: { create: { name: "My Watchlist" } },
-      portfolios: { create: { name: "My Portfolio" } },
-    },
-    select: { id: true, email: true },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
   const token = signToken(user.id);
   return NextResponse.json({
-    ok: true,
-    userId: user.id,
     token,
-    user: { id: user.id, email: user.email, name: name ?? null },
+    user: { id: user.id, email: user.email, name: user.name },
   });
 }
